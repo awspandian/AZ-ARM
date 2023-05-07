@@ -1,0 +1,91 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "resourceLocation": {
+            "type": "string",
+            "defaultValue": "East US",
+            "allowedValues": ["East US", "UK South"]
+
+        }
+    },
+    "functions": [],
+    "variables": {},
+    "resources": [
+               {
+            "name": "Dnet",
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2022-09-01",
+            "location": "[parameters('resourceLocation')]",
+            "tags": {
+                "displayName": "Dnet"
+            },
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "10.0.0.0/16"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "Dsn1",
+                        "properties": {
+                            "addressPrefix": "10.0.0.0/24"
+                        }
+                    },
+                    {
+                        "name": "Dsn2",
+                        "properties": {
+                            "addressPrefix": "10.0.1.0/24"
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "name": "D-ip",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2022-09-01",
+            "location": "[parameters('resourceLocation')]",
+            "tags": {
+                "displayName": "D-ip"
+            },
+            "sku": {
+                "name": "Basic"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic"
+                }
+        },
+        {
+            "name": "D-interface",
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2022-09-01",
+            "location": "[parameters('resourceLocation')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/virtualNetworks', 'Dnet')]",
+                "[resourceId('Microsoft.Network/publicIPAddresses', 'D-ip')]"
+            ],
+            
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipConfig1",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'Dnet', 'Dsn1')]"
+                            },
+                            "publicIPAddress":{
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'D-ip')]"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+
+
+    ],
+    "outputs": {}
+}
